@@ -5,7 +5,7 @@
             'dark:text-white' => config('filament.dark_mode'),
         ])
     >
-        {{-- <img src="{{ asset('/img/logo.png') }}" alt="Logo" class="h-10" style="display: inline-block"> --}}
+        <img src="{{ asset('/img/ADS.png') }}" alt="Logo" class="h-10" style="display: inline-block">
         {{ $brand }}
     </div>
 @endif
