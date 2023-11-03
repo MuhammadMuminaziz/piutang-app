@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Filament\Tables\Filters\Filter;
 use Illuminate\Support\Facades\App;
 
 class PiutangResource extends Resource
@@ -36,13 +37,23 @@ class PiutangResource extends Resource
 
     protected static ?string $navigationLabel = 'Piutang';
 
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->whereStatus('Belum Lunas');
+    }
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 TextInput::make('id_customer')->label('Id Customer')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->unique(ignoreRecord: true),
+                TextInput::make('no_faktur')->label('No Faktur')
+                    ->required()
+                    ->maxLength(255)
+                    ->unique(ignoreRecord: true),
                 TextInput::make('name')->label('Nama')
                     ->required()
                     ->maxLength(255),
@@ -63,6 +74,9 @@ class PiutangResource extends Resource
                 TextColumn::make('id_customer')->label('Id Customer')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('no_faktur')->label('No Faktur')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('name')->label('Nama')
                     ->searchable()
                     ->sortable(),
@@ -80,7 +94,22 @@ class PiutangResource extends Resource
                     ->dateTime('d F Y'),
             ])
             ->filters([
-                // 
+                Filter::make('created_at')
+                ->form([
+                    Forms\Components\DatePicker::make('created_from'),
+                    Forms\Components\DatePicker::make('created_until'),
+                ])
+                ->query(function (Builder $query, array $data): Builder {
+                    return $query
+                        ->when(
+                            $data['created_from'],
+                            fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                        )
+                        ->when(
+                            $data['created_until'],
+                            fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                        );
+                })
             ])
             ->actions([
                 Action::make('bayar')->label('Bayar')
@@ -105,6 +134,7 @@ class PiutangResource extends Resource
                         TextInput::make('price')->label('Bayar')
                             ->required()
                             ->numeric()
+                            ->lte('bill')
                             ->placeholder('Contoh: 100000'),
                     ])
                     ->modalButton('Save change')
@@ -117,6 +147,7 @@ class PiutangResource extends Resource
                     ->mountUsing(fn (Model $record, ComponentContainer $form) => $form->fill([
                         'id' => $record->id,
                         'id_customer' => $record->id_customer,
+                        'no_faktur' => $record->no_faktur,
                         'name' => $record->name,
                         'address' => $record->address,
                         'bill' => $record->bill,
@@ -128,7 +159,8 @@ class PiutangResource extends Resource
                         TextInput::make('name')->label('Nama')
                             ->disabled(),
                         TextInput::make('no_faktur')->label('No. Faktur')
-                            ->required(),
+                            ->required()
+                            ->disabled(),
                         DatePicker::make('tempo')->label('Tanggal Jt Tempo')
                             ->required()
                             ->displayFormat('d-m-Y')
@@ -138,7 +170,7 @@ class PiutangResource extends Resource
                             ->numeric()
                             ->disabled(),
                     ])
-                    ->modalButton('Download Faktur')
+                    ->modalButton('Print Faktur')
                     ->action(fn (array $data) => self::downloadFaktur($data)),
                 ActionGroup::make([
                     ViewAction::make()->label('Histori')
@@ -173,7 +205,7 @@ class PiutangResource extends Resource
         if ($bill <= 0) {
             $dataPiutang = [
                 'bill' => 0,
-                'status' => true
+                'status' => 'Lunas'
             ];
         } else {
             $dataPiutang = [
@@ -190,10 +222,10 @@ class PiutangResource extends Resource
 
     public static function downloadFaktur($data)
     {
-        $pdf = Pdf::loadview('pdf.faktur', compact('data'))->setOption(['defaultFont' => 'sans-serif'])->output();
-        return response()->streamDownload(
-            fn () => print($pdf),
-            "Faktur Piutang " . date('d F Y') . '.pdf'
-        );
+        return redirect(route('download.faktur', [
+            'idPiutang' => $data['id'],
+            'noFaktur' => $data['no_faktur'],
+            'date' => $data['tempo']
+        ]));
     }
 }

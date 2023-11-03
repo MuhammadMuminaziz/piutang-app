@@ -6,6 +6,7 @@ use App\Filament\Resources\PiutangResource;
 use App\Models\Kredit;
 use App\Models\Piutang;
 use Filament\Forms\Components\TextInput;
+use Filament\Pages\Actions\Action;
 use Filament\Resources\Pages\Page;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\DeleteBulkAction;
@@ -14,6 +15,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Illuminate\Database\Eloquent\Builder;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class HistoryPiutang extends Page implements HasTable
 {
@@ -49,6 +51,17 @@ class HistoryPiutang extends Page implements HasTable
         ];
     }
 
+    protected function getActions(): array
+    {
+        return [
+            Action::make('print')->label('Print Histori')
+                ->url(fn () => route('download.histori', $this->record->id))
+                ->openUrlInNewTab(),
+            Action::make('download')->label('Download Histori')
+                ->action(fn () => $this->download()),
+        ];
+    }
+
     protected function getTableActions(): array
     {
         return [
@@ -68,5 +81,15 @@ class HistoryPiutang extends Page implements HasTable
         return [
             DeleteBulkAction::make()
         ];
+    }
+
+    public function download()
+    {
+        $user = $this->record;
+        $pdf = Pdf::loadview('pdf.history', compact('user'))->setOption(['defaultFont' => 'sans-serif'])->output();
+        return response()->streamDownload(
+            fn () => print($pdf),
+            "Histori bayar $user->name.pdf"
+        );
     }
 }

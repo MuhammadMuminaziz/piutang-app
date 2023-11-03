@@ -12,6 +12,10 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Illuminate\Database\Eloquent\Builder;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Filament\Forms\ComponentContainer;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
+use Filament\Tables\Filters\Filter;
 
 class LaporanPage extends Page implements HasTable
 {
@@ -24,6 +28,9 @@ class LaporanPage extends Page implements HasTable
     protected static ?string $title = 'Laporan';
 
     protected static ?int $navigationSort = 4;
+
+    public $fromDate;
+    public $untilDate;
 
     protected function getTableQuery(): Builder
     {
@@ -54,17 +61,58 @@ class LaporanPage extends Page implements HasTable
         ];
     }
 
+    public function getTableFilters(): array
+    {
+        return [
+            Filter::make('created_at')
+                ->form([
+                    DatePicker::make('created_from'),
+                    DatePicker::make('created_until'),
+                ])
+                ->query(function (Builder $query, array $data): Builder {
+                    return $query
+                        ->when(
+                            $data['created_from'],
+                            function (Builder $query, $date): Builder {
+                                $this->fromDate = $date;
+                                return $query->whereDate('created_at', '>=', $date);
+                            },
+                        )
+                        ->when(
+                            $data['created_until'],
+                            function (Builder $query, $date): Builder {
+                                $this->untilDate = $date;
+                                return $query->whereDate('created_at', '<=', $date);
+                            },
+                        );
+                })
+            ];
+    }
+
     protected function getActions(): array
     {
         return [
-            Action::make('download')->label('Download Laporan')
-                ->action(fn () => $this->download())
+            Action::make('print')->label('Print')
+                ->url(fn () => route('download.laporan', ['fromdate' => $this->fromDate, 'untildate' => $this->untilDate]))
+                ->openUrlInNewTab(),
+            Action::make('download')->label('Download')
+                ->action(fn () => $this->download()),
         ];
     }
 
     public function download()
     {
-        $piutangs = Piutang::orderBy('id', 'desc')->get();
+        $fromDate = $this->fromDate;
+        $untilDate = $this->untilDate;
+
+        $piutangs = Piutang::orderBy('id', 'desc')
+            ->when($fromDate != null, function(Builder $query, $fromDate) {
+                $query->whereDate('created_at', '>=', $this->fromDate);
+            })
+            ->when($untilDate != null, function(Builder $query, $untilDate) {
+                $query->whereDate('created_at', '<=', $this->untilDate);
+            })->get();
+
         if ($piutangs->count() != 0) {
             $pdf = Pdf::loadview('pdf.laporan', compact('piutangs'))->setOption(['defaultFont' => 'sans-serif'])->output();
             return response()->streamDownload(

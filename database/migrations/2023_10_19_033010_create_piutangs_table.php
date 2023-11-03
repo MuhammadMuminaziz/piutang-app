@@ -14,10 +14,13 @@ return new class extends Migration
         Schema::create('piutangs', function (Blueprint $table) {
             $table->id();
             $table->string('id_customer');
+            $table->string('no_faktur');
             $table->string('name');
+            $table->string('name_cathier');
             $table->string('address');
+            $table->string('price');
             $table->string('bill');
-            $table->boolean('status')->default(false);
+            $table->string('status')->default('Belum Lunas');
             $table->timestamps();
         });
     }

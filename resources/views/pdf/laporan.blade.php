@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Faktur</title>
+    <title>Laporan</title>
     <style>
         .table {
             border-collapse: collapse;
@@ -13,11 +13,11 @@
         .table tr th{
             background: rgb(219, 219, 219);
             text-align: left;
-            padding: 0 5px;
+            padding: 3px 5px;
         }
 
         .table tr td{
-            padding: 0 5px;
+            padding: 3px 5px;
         }
     </style>
 </head>

@@ -14,7 +14,12 @@ class ManagePiutangs extends ManageRecords
     {
         return [
             Actions\CreateAction::make()
-                ->modalWidth('md'),
+                ->modalWidth('md')
+                ->mutateFormDataUsing(function (array $data): array {
+                    $data['price'] = $data['bill'];
+                    $data['name_cathier'] = auth()->user()->name;
+                    return $data;
+                })
         ];
     }
 }
