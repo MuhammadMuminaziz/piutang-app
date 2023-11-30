@@ -37,6 +37,8 @@ class PiutangResource extends Resource
 
     protected static ?string $navigationLabel = 'Piutang';
 
+    protected static ?string $navigationGroup = 'Master';
+
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->whereStatus('Belum Lunas');
@@ -199,6 +201,7 @@ class PiutangResource extends Resource
         $bill = $data['bill'] - $data['price'];
         Kredit::create([
             'piutang_id' => $data['id'],
+            'name_cathier' => auth()->user()->name,
             'price' => $data['price']
         ]);
 

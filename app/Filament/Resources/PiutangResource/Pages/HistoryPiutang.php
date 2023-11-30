@@ -16,6 +16,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Illuminate\Database\Eloquent\Builder;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Filament\Forms\Components\Hidden;
 
 class HistoryPiutang extends Page implements HasTable
 {
@@ -68,11 +69,20 @@ class HistoryPiutang extends Page implements HasTable
             EditAction::make()
                 ->modalWidth('md')
                 ->form([
+                    Hidden::make('id'),
+                    Hidden::make('piutang_id'),
                     TextInput::make('price')->label('Bayar')
                         ->required()
                         ->numeric()
-                ]),
-            DeleteAction::make()
+                ])->mutateFormDataUsing(function (array $data) {
+                    $piutang = Piutang::find($data['piutang_id']);
+                    $kredit = Kredit::find($data['id']);
+                    $new_bill = ($piutang->bill + $kredit->price) - $data['price'];
+                    $piutang->update([
+                        'bill' => $new_bill
+                    ]);
+                    return $data;
+                })
         ];
     }
 

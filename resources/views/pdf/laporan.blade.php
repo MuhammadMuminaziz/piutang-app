@@ -19,6 +19,10 @@
         .table tr td{
             padding: 3px 5px;
         }
+
+        .border-none {
+            border-top: 1px solid black;
+        }
     </style>
 </head>
 <body>
@@ -42,6 +46,12 @@
                 <td>{{ currency_IDR($piutang->bill) }}</td>
             </tr>
         @endforeach
+        <tr>
+            <td class="border-none"></td>
+            <td class="border-none"></td>
+            <td class="border-none" style="text-align: center" colspan="2">TOTAL</td>
+            <td class="bill border-none">{{ currency_IDR($data['pendapatan']) }}</td>
+        </tr>
     </table>
 </body>
 </html>

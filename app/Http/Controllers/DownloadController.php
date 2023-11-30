@@ -19,15 +19,26 @@ class DownloadController extends Controller
         return $pdf->stream();
     }
 
-    public function downloadPendapatan()
+    public function downloadPendapatan($type, $fromDate = null, $untilDate = null)
     {
-        $credits = Kredit::orderBy('id', 'desc')->whereDate('created_at', now())->get();
+        if ($type === 'harian') {
+            $credits = Kredit::orderBy('id', 'desc')->whereDate('created_at', now())->get();
+        } else {
+            $credits = Kredit::orderBy('id', 'desc')
+                ->when($fromDate, function(Builder $query, $fromDate) {
+                    $query->whereDate('created_at', '>=', $fromDate);
+                })
+                ->when($untilDate, function(Builder $query, $untilDate) {
+                    $query->whereDate('created_at', '<=', $untilDate);
+                })->get();
+        }
+
         $data = [
             'pendapatan' => $credits->sum('price')
         ];
         
         Pdf::setOption(['defaultFont' => 'sans-serif']);
-        $pdf = Pdf::loadview('pdf.histories', compact('credits', 'data'))->setPaper('a4','landscape');
+        $pdf = Pdf::loadview('pdf.histories', compact('credits', 'data'));
         return $pdf->stream();
     }
 
@@ -41,8 +52,10 @@ class DownloadController extends Controller
                 $query->whereDate('created_at', '<=', $untilDate);
             })->get();
 
+        $data['pendapatan'] = $piutangs->sum('bill');
+
         Pdf::setOption(['defaultFont' => 'sans-serif']);
-        $pdf = Pdf::loadview('pdf.laporan', compact('piutangs'));
+        $pdf = Pdf::loadview('pdf.laporan', compact('piutangs', 'data'));
         return $pdf->stream();
     }
 

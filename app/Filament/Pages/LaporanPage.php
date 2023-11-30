@@ -27,6 +27,8 @@ class LaporanPage extends Page implements HasTable
 
     protected static ?string $title = 'Laporan';
 
+    protected static ?string $navigationGroup = 'Laporan';
+
     protected static ?int $navigationSort = 4;
 
     public $fromDate;

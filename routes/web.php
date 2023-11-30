@@ -17,5 +17,5 @@ use Illuminate\Support\Facades\Route;
 // Route::redirect('/', 'login')->name('login');
 Route::get('download/histori/{id}', [DownloadController::class, 'downloadHistori'])->name('download.histori');
 Route::get('download/laporan/{fromdate?}/{untildate?}', [DownloadController::class, 'downloadLaporan'])->name('download.laporan');
-Route::get('download/pendapatan', [DownloadController::class, 'downloadPendapatan'])->name('download.pendapatan');
+Route::get('download/pendapatan/{type?}/{fromdate?}/{untildate?}', [DownloadController::class, 'downloadPendapatan'])->name('download.pendapatan');
 Route::get('download/faktur/{idPiutang?}/{noFaktur?}/{date?}', [DownloadController::class, 'downloadFaktur'])->name('download.faktur');

@@ -22,7 +22,11 @@ class PendapatanPage extends Page implements HasTable
 
     protected static string $view = 'filament.pages.pendapatan-page';
 
-    protected static ?string $title = 'Pendapatan Harian';
+    protected static ?string $title = 'Hari Ini';
+
+    protected static ?string $navigationGroup = 'Pendapatan';
+
+    protected static ?int $navigationSort = -4;
 
     protected function getTableQuery(): Builder
     {
@@ -42,7 +46,7 @@ class PendapatanPage extends Page implements HasTable
             TextColumn::make('piutang.no_faktur')->label('No Faktur')
                 ->searchable()
                 ->sortable(),
-            TextColumn::make('piutang.name_cathier')->label('Nama Kasir')
+            TextColumn::make('name_cathier')->label('Nama Kasir')
                 ->searchable()
                 ->sortable(),
             TextColumn::make('piutang.name')->label('Nama Pelanggan')
@@ -68,7 +72,7 @@ class PendapatanPage extends Page implements HasTable
     {
         return [
             ActionsAction::make('print')->label('Print')
-                ->url(fn () => route('download.pendapatan'))
+                ->url(fn () => route('download.pendapatan', ['type' => 'semua']))
                 ->openUrlInNewTab(),
             ActionsAction::make('download')->label('Download')
                 ->action(fn () => $this->download()),
@@ -84,7 +88,7 @@ class PendapatanPage extends Page implements HasTable
         ];
 
         if ($credits->count() != 0) {
-            $pdf = Pdf::loadview('pdf.histories', compact('credits', 'data'))->setOption(['defaultFont' => 'sans-serif'])->setPaper('a4','landscape')->output();
+            $pdf = Pdf::loadview('pdf.histories', compact('credits', 'data'))->setOption(['defaultFont' => 'sans-serif'])->output();
             return response()->streamDownload(
                 fn () => print($pdf),
                 "Laporan Pendapatan " . date('d F Y') . '.pdf'

@@ -53,7 +53,7 @@
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ date('d-m-Y', strtotime($row->created_at)) }}</td>
                 <td>{{ $row->piutang->no_faktur }}</td>
-                <td>{{ $row->piutang->name_cathier }}</td>
+                <td>{{ $row->name_cathier }}</td>
                 <td>{{ $row->piutang->name }}</td>
                 <td>0</td>
                 <td class="bill">{{ currency_IDR($row['price']) }}</td>
